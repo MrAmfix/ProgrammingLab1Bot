@@ -1,13 +1,20 @@
 import telebot
 from telebot import types
+import googlesearch
 import random
 
 bot = telebot.TeleBot("6374226963:AAHWJ8AgOnS8JIzvmDok4rX-QV1vhNIHGjQ")
 user_states = {}
 
+
+
 def wait_message():
-    arr = ["💣", "☣️", "( -_•)╦̵̵̿╤─", "🔪", "🍆+🍑+🥛=👶", "🤡"]
+    arr = ["💣", "🏀", "⚽", "🌚", "👨‍💻", "🤡", "💬"]
     return random.choice(arr)
+
+def rand_message(text):
+    return "Моя твоя не понимать"
+    #return googlesearch.search(text)
 
 def start_keyboard():
     keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
@@ -44,9 +51,9 @@ def send_welcome(message):
         bot.send_message(message.from_user.id, "А я знаю, что ты Леша")
     elif user_id == "muthafunk":
         bot.send_message(message.from_user.id, "А я знаю, что ты Артем")
+    elif user_id == "n_e_q_u_m_a":
+        bot.send_message(message.from_user.id, "А я знаю, что ты Егор Гагарин")
     user_states[message.from_user.id] = "menu"
-
-
 
 @bot.message_handler(func=lambda message: user_states.get(message.from_user.id) == "menu")
 def menu(message):
@@ -57,7 +64,8 @@ def menu(message):
         bot.send_message(message.from_user.id, wait_message(), reply_markup=rep_keyboard())
         user_states[message.from_user.id] = "github"
     else:
-        bot.send_message(message.from_user.id, "Моя твоя не понимать")
+        rand_message(message.text)
+        bot.send_message(message.from_user.id, rand_message(message.text))
 
 @bot.message_handler(func=lambda message: user_states.get(message.from_user.id) == "write")
 def write(message):
@@ -71,7 +79,8 @@ def write(message):
         bot.send_message(message.from_user.id, wait_message(), reply_markup=start_keyboard())
         user_states[message.from_user.id] = "menu"
     else:
-        bot.send_message(message.from_user.id, "Моя твоя не понимать")
+        rand_message(message.text)
+        bot.send_message(message.from_user.id, rand_message(message.text))
 
 @bot.message_handler(func=lambda message: user_states.get(message.from_user.id) == "github")
 def github(message):
@@ -88,6 +97,7 @@ def github(message):
         bot.send_message(message.from_user.id, wait_message(), reply_markup=start_keyboard())
         user_states[message.from_user.id] = "menu"
     else:
-        bot.send_message(message.from_user.id, "Моя твоя не понимать")
+        rand_message(message.text)
+        bot.send_message(message.from_user.id, rand_message(message.text))
 
 bot.polling(none_stop=True, interval=0)

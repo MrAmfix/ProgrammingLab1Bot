@@ -67,8 +67,7 @@ def wait_message():
     return random.choice(arr)
 
 def rand_message(text):
-    return "Моя твоя не понимать"
-    #return googlesearch.search(text)
+    return "Я вас не понимаю"
 
 def start_keyboard():
     keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)

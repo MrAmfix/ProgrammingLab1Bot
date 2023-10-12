@@ -1,12 +1,66 @@
 import telebot
 from telebot import types
-import googlesearch
 import random
 
 bot = telebot.TeleBot("6374226963:AAHWJ8AgOnS8JIzvmDok4rX-QV1vhNIHGjQ")
 user_states = {}
 
+def is_correct_string(strx):
+    strx = strx.lstrip()
+    if strx[0] == "+" or strx[0] == "-":
+        strx = strx[1:]
+    strx += " "
+    math_sign = ["+", "-", "*", "/"]
+    numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    arr_check = []
+    curr_str = ""
+    for i in strx:
+        if i in math_sign or i == " ":
+            if len(curr_str) != 0:
+                if curr_str[-1] == ".":
+                    return False
+                else:
+                    arr_check.append(curr_str)
+                    curr_str = ""
+            if i != " ":
+                arr_check.append(i)
+        elif i == ".":
+            if len(curr_str) == 0:
+                return False
+            elif "." in curr_str:
+                return False
+            else:
+                curr_str += i
+        elif i in numbers:
+            curr_str += i
+        else:
+            return False
 
+    if (arr_check[0] in math_sign and (arr_check[0] != "-" or arr_check[0] != "+")) or (arr_check[-1] in math_sign):
+        return False
+    else:
+        curr_state = ""
+        if arr_check[0] in math_sign:
+            curr_state = "SIGN"
+        else:
+            curr_state = "NUMBER"
+        last_sign = ""
+        for i in arr_check[1:]:
+            if i in math_sign:
+                if curr_state == "SIGN":
+                    return False
+                else:
+                    last_sign = i
+                    curr_state = "SIGN"
+            else:
+                if curr_state == "NUMBER":
+                    return False
+                else:
+                    if last_sign == "/" and float(i) == 0:
+                        return False
+                    else:
+                        curr_state = "NUMBER"
+        return True
 
 def wait_message():
     arr = ["💣", "🏀", "⚽", "🌚", "👨‍💻", "🤡", "💬"]
@@ -20,7 +74,13 @@ def start_keyboard():
     keyboard = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     link_reg = types.KeyboardButton("Запись на сдачу")
     link_rep = types.KeyboardButton("Ссылки на учебные github")
-    keyboard.add(link_reg, link_rep)
+    test_lab2 = types.KeyboardButton("Проверить Lab#1")
+    keyboard.add(link_reg, link_rep, test_lab2)
+    return keyboard
+
+def end_keyboard():
+    keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard.add(types.KeyboardButton("Назад"))
     return keyboard
 
 def reg_keyboard():
@@ -44,15 +104,11 @@ def rep_keyboard():
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.send_message(message.from_user.id, f"Приветствую вас, {message.from_user.username}, в Институте Теплых Мужских Отношений."
+    user = message.from_user
+    fn = user.first_name
+    ln = user.last_name if user.last_name else ""
+    bot.send_message(message.from_user.id, f"Приветствую вас, {fn} {ln}, в Институте Теплых Мужских Отношений."
                                            f"\nМеня зовут It's Moshniy bot.\nЧем могу помочь?", reply_markup=start_keyboard())
-    user_id = message.from_user.username
-    if user_id == "Kabachok_1":
-        bot.send_message(message.from_user.id, "А я знаю, что ты Леша")
-    elif user_id == "muthafunk":
-        bot.send_message(message.from_user.id, "А я знаю, что ты Артем")
-    elif user_id == "n_e_q_u_m_a":
-        bot.send_message(message.from_user.id, "А я знаю, что ты Егор Гагарин")
     user_states[message.from_user.id] = "menu"
 
 @bot.message_handler(func=lambda message: user_states.get(message.from_user.id) == "menu")
@@ -63,9 +119,27 @@ def menu(message):
     elif message.text == "Ссылки на учебные github":
         bot.send_message(message.from_user.id, wait_message(), reply_markup=rep_keyboard())
         user_states[message.from_user.id] = "github"
+    elif message.text == "Проверить Lab#1":
+        bot.send_message(message.from_user.id, wait_message(), reply_markup=end_keyboard())
+        user_states[message.from_user.id] = "test"
     else:
         rand_message(message.text)
         bot.send_message(message.from_user.id, rand_message(message.text))
+
+@bot.message_handler(func=lambda message: user_states.get(message.from_user.id) == "test")
+def test(message):
+    if message.text == "Назад":
+        bot.send_message(message.from_user.id, wait_message(), reply_markup=start_keyboard())
+        user_states[message.from_user.id] = "menu"
+    else:
+        if is_correct_string(message.text):
+            try:
+                result = eval(message.text)
+                bot.send_message(message.from_user.id, result)
+            except Exception as e:
+                bot.send_message(message.from_user.id, "Code Error!!!!")
+        else:
+            bot.send_message(message.from_user.id, "Неправильный формат строки")
 
 @bot.message_handler(func=lambda message: user_states.get(message.from_user.id) == "write")
 def write(message):
